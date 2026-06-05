@@ -37,7 +37,7 @@ function App() {
       if (targetRole.trim()) {
         formData.append("target_role", targetRole.trim());
       }
-      const API_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : (import.meta.env.DEV ? "http://localhost:5000" : "");
+      const API_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : (import.meta.env.DEV ? "http://localhost:5000" : "/_/backend");
       const response = await axios.post(
         `${API_URL}/api/analyze`,
         formData,
