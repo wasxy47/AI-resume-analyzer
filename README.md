@@ -8,79 +8,114 @@
     <img src="https://img.shields.io/badge/Styling-Tailwind%20CSS%20v4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
     <img src="https://img.shields.io/badge/Backend-Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask" />
     <img src="https://img.shields.io/badge/AI-Groq%20Llama--3-F55036?style=for-the-badge&logo=artificial-intelligence&logoColor=white" alt="Groq" />
-    <img src="https://img.shields.io/badge/Deployment-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
   </p>
 </div>
 
+---
+
 ## 🌟 Overview
 
-**ResumeAI** is an advanced full-stack application designed to analyze, optimize, and score resumes against specific job descriptions. Powered by ultra-fast LLMs via the **Groq API**, it acts as a virtual recruiter, providing deep insights, actionable roadmaps, and instantly generated assets like cover letters and interview questions.
+**ResumeAI** is an advanced full-stack web application designed to analyze, optimize, and score professional resumes against specific job descriptions. Powered by ultra-fast Large Language Models via the **Groq API**, it acts as your personal AI recruiter. It provides deep analytical insights, actionable roadmaps, and instantly generated career assets like customized cover letters and interview questions.
 
-With a premium dark-mode UI, smooth animations, and a decoupled architecture, ResumeAI offers a state-of-the-art user experience for job seekers looking to land their dream roles.
+With a premium dark-mode UI, smooth animations, and a highly modular architecture, ResumeAI offers a state-of-the-art user experience for job seekers aiming to land their dream roles and bypass modern ATS barriers.
 
-## ✨ Key Features
+## ✨ Key Features & Capabilities
 
-- 📊 **ATS Compatibility Check**: Parses your resume and grades it against modern Applicant Tracking Systems.
-- 🎯 **JD Matching**: Upload a Job Description (JD) to see exactly how well your resume aligns with the role.
-- 📝 **Live Re-Scorer**: Make adjustments to your resume and get immediate updated scores and feedback.
-- ✉️ **Cover Letter Generator**: Instantly craft highly tailored, professional cover letters (with tone adjustments).
-- 🎤 **Interview Prep**: Generates personalized behavioral and technical interview questions based on your experience.
-- 📥 **Export & Share**: Download your analysis report as a high-quality PDF or share your score beautifully.
+- 📊 **ATS Compatibility Check**: Parses your resume (PDF/DOCX) and grades its formatting, keyword density, and parseability against modern Applicant Tracking Systems.
+- 🎯 **Deep JD Matching**: Upload a Job Description (JD) to see exactly how well your resume aligns with the target role, complete with missing keywords and hard-skill gap analysis.
+- 📝 **Live Re-Scorer**: Make adjustments to your resume text directly within the app and get immediate updated scores and feedback without re-uploading the file.
+- ✉️ **AI Cover Letter Generator**: Instantly craft highly tailored, professional cover letters that highlight your strengths. You can also adjust the tone (Professional, Confident, Concise).
+- 🎤 **Interview Prep**: Generates personalized behavioral and technical interview questions based on your unique experience and the target job description.
+- 📥 **Export & Share**: Download your comprehensive analysis report as a high-quality PDF, or share your score dynamically.
+- 📱 **Fully Responsive UI**: Works seamlessly across desktop, tablet, and mobile devices with a collapsible sidebar and native bottom navigation.
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 18, Vite, Tailwind CSS v4, jsPDF, html2canvas
-- **Backend**: Python, Flask, Groq API (llama-3.3-70b-versatile), PyPDF2, python-docx
-- **Deployment**: Vercel (Serverless Functions for Python)
+**Frontend Architecture:**
+- **Framework**: React 18
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS v4 (with custom CSS layering and themes)
+- **Icons**: Lucide React / Custom SVG
+- **PDF Generation**: jsPDF & html2canvas
+
+**Backend Architecture:**
+- **Server**: Python 3.10+ / Flask Framework
+- **AI Integration**: Groq API (`llama-3.3-70b-versatile` model for lightning-fast inference)
+- **Document Processing**: `pdfplumber` (for PDF parsing), `python-docx` (for Word documents)
+- **CORS & APIs**: `flask-cors`
+
+---
+
+## 📂 Project Structure
+
+```text
+📦 AI-resume-analyzer
+ ┣ 📂 api                  # Serverless function entry point for cloud deployment
+ ┃ ┗ 📜 index.py           # Vercel serverless adapter for the Flask app
+ ┣ 📂 backend              # Python Flask API logic
+ ┃ ┣ 📜 app.py             # Main Flask server and route definitions
+ ┃ ┣ 📜 analyzer.py        # Core AI interaction and document parsing logic
+ ┃ ┗ 📜 requirements.txt   # Python dependencies
+ ┣ 📂 frontend             # React UI application
+ ┃ ┣ 📂 src                # UI Components, styles, and assets
+ ┃ ┣ 📂 public             # Static assets
+ ┃ ┣ 📜 index.html         # Main HTML entry point
+ ┃ ┣ 📜 package.json       # Node.js dependencies
+ ┃ ┗ 📜 vite.config.js     # Vite configuration
+ ┣ 📜 vercel.json          # Deployment configuration
+ ┗ 📜 README.md            # Project documentation
+```
+
+---
 
 ## 🚀 Quick Start (Local Development)
 
+To run this application locally on your machine, follow these steps:
+
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/ResumeAI.git
-cd ResumeAI
+git clone https://github.com/wasxy47/AI-resume-analyzer.git
+cd AI-resume-analyzer
 ```
 
 ### 2. Backend Setup
+Set up your Python virtual environment and start the Flask server.
 ```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 
 # Create a .env file and add your Groq API Key
-echo "GROQ_API_KEY=your_api_key_here" > .env
+echo "GROQ_API_KEY=your_actual_groq_api_key_here" > .env
 
 # Run the Flask Server
 python app.py
 ```
-*Backend will run on `http://localhost:5000`*
+*The backend API will run natively on `http://localhost:5000`*
 
 ### 3. Frontend Setup
+Open a new terminal window to start the React application.
 ```bash
-cd ../frontend
+cd frontend
 npm install
 
 # Run the Vite Dev Server
 npm run dev
 ```
-*Frontend will run on `http://localhost:5173`*
+*The frontend application will be available at `http://localhost:5173`*
 
-## 🌐 Vercel Deployment Guide
+---
 
-This project is fully pre-configured for a seamless deployment on Vercel!
+## 🌐 Deployment (Vercel)
 
-1. Push your code to a **GitHub repository**.
-2. Go to your [Vercel Dashboard](https://vercel.com/dashboard) and click **Add New > Project**.
-3. Import your GitHub repository.
-4. **Important Framework Settings**:
-   - Vercel will automatically detect Vite for the frontend.
-   - Keep the default Build Command (`npm run build`) and Output Directory (`dist`).
-5. **Environment Variables**:
-   - Add a new variable:
-     - **Name**: `GROQ_API_KEY`
-     - **Value**: `your_actual_groq_api_key_here`
-6. Click **Deploy**.
+This project is already pre-configured for full-stack deployment on Vercel. 
 
-**How the deployment works:**
-The `vercel.json` file is configured to serve the frontend normally and route all `/api/(.*)` requests to the Python serverless function located at `api/index.py`. The `requirements.txt` at the root ensures Vercel installs all necessary Python packages.
+1. Push your repository to GitHub.
+2. Import the project in Vercel.
+3. Ensure the **Framework Preset** is set to Vite.
+4. Add `GROQ_API_KEY` to the **Environment Variables**.
+5. Deploy! Vercel will automatically serve the frontend and host the Python backend via Serverless Functions.
+
+---
+*Built with ❤️ for modern job seekers.*
