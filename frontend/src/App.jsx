@@ -70,11 +70,12 @@ function App() {
       setActiveTab("overview");
     } catch (err) {
       if (err.response?.data?.error) {
-        setError(err.response.data.error);
+        const errData = err.response.data.error;
+        setError(typeof errData === 'string' ? errData : errData.message || JSON.stringify(errData));
       } else if (err.code === "ECONNABORTED") {
         setError("Request timed out. Please try again.");
       } else if (err.code === "ERR_NETWORK") {
-        setError("Cannot connect to the server. Make sure the backend is running on port 5000.");
+        setError("Cannot connect to the server. Please check your internet connection.");
       } else {
         setError("An error occurred while analyzing your resume. Please try again.");
       }

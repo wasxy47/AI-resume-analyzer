@@ -12,6 +12,10 @@ POST /api/analyze
 
 import logging
 import os
+import sys
+
+# Fix for Vercel deployment: Ensure the backend directory is in the Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
