@@ -1,63 +1,64 @@
+import { useRef, useState } from "react";
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { useState } from "react";
+import ShareCard from "./ShareCard";
 
 export default function DownloadReport({ data }) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isGeneratingShare, setIsGeneratingShare] = useState(false);
+  const shareCardRef = useRef(null);
 
   const generatePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
 
-    const addText = (text, x, fontSize, style = "normal", color = [10, 10, 10]) => {
+    const addText = (text, x, fontSize, style = "normal", color = [18, 24, 20]) => {
       doc.setFontSize(fontSize);
       doc.setFont("helvetica", style);
       doc.setTextColor(...color);
-      const lines = doc.splitTextToSize(text, pageWidth - x - 20);
+      const lines = doc.splitTextToSize(String(text), pageWidth - x - 20);
       lines.forEach((line) => {
         if (y > 275) {
           doc.addPage();
           y = 20;
         }
         doc.text(line, x, y);
-        y += fontSize * 0.5;
+        y += fontSize * 0.52;
       });
     };
 
-    const addSpacer = (h = 8) => { y += h; };
-    const addLine = () => {
-      doc.setDrawColor(229, 229, 229);
-      doc.line(15, y, pageWidth - 15, y);
-      y += 5;
+    const addSpacer = (height = 8) => {
+      y += height;
     };
 
-    // Title
-    addText("Resume Analysis Report", 15, 22, "bold", [0, 113, 227]);
+    const addLine = () => {
+      doc.setDrawColor(220, 226, 220);
+      doc.line(15, y, pageWidth - 15, y);
+      y += 6;
+    };
+
+    addText("ResumeAI Analysis Report", 15, 22, "bold", [29, 116, 98]);
     addSpacer(12);
 
-    // Candidate info
     if (data.candidate_name) {
       addText(`Candidate: ${data.candidate_name}`, 15, 12, "bold");
       addSpacer(4);
     }
     if (data.detected_role) {
-      addText(`Detected Role: ${data.detected_role}`, 15, 11, "normal", [100, 100, 100]);
+      addText(`Detected Role: ${data.detected_role}`, 15, 11, "normal", [93, 104, 96]);
       addSpacer(4);
     }
     addLine();
 
-    // Overall Score
     addText(`Overall Score: ${data.overall_score ?? "N/A"} / 100`, 15, 16, "bold");
     addSpacer(6);
 
-    // Summary
     if (data.summary) {
-      addText(data.summary, 15, 10, "normal", [80, 80, 80]);
+      addText(data.summary, 15, 10, "normal", [82, 90, 84]);
       addSpacer(6);
     }
     addLine();
 
-    // Section Scores
     if (data.section_scores) {
       addText("Section Scores", 15, 14, "bold");
       addSpacer(6);
@@ -71,50 +72,48 @@ export default function DownloadReport({ data }) {
       };
       Object.entries(labels).forEach(([key, label]) => {
         const score = data.section_scores[key] ?? "N/A";
-        addText(`• ${label}: ${score}/100`, 18, 10);
+        addText(`- ${label}: ${score}/100`, 18, 10);
         addSpacer(2);
       });
       addSpacer(4);
       addLine();
     }
 
-    // Skills Analysis
     if (data.skills_analysis) {
       addText("Skills Analysis", 15, 14, "bold");
       addSpacer(6);
-      const sa = data.skills_analysis;
-      if (sa.technical_skills?.length) {
-        addText(`Technical: ${sa.technical_skills.join(", ")}`, 18, 10);
+      const skills = data.skills_analysis;
+      if (skills.technical_skills?.length) {
+        addText(`Technical: ${skills.technical_skills.join(", ")}`, 18, 10);
         addSpacer(3);
       }
-      if (sa.soft_skills?.length) {
-        addText(`Soft Skills: ${sa.soft_skills.join(", ")}`, 18, 10);
+      if (skills.soft_skills?.length) {
+        addText(`Soft Skills: ${skills.soft_skills.join(", ")}`, 18, 10);
         addSpacer(3);
       }
-      if (sa.certifications?.length) {
-        addText(`Certifications: ${sa.certifications.join(", ")}`, 18, 10);
+      if (skills.certifications?.length) {
+        addText(`Certifications: ${skills.certifications.join(", ")}`, 18, 10);
         addSpacer(3);
       }
-      if (sa.missing_key_skills?.length) {
-        addText(`Missing: ${sa.missing_key_skills.join(", ")}`, 18, 10, "normal", [255, 59, 48]);
+      if (skills.missing_key_skills?.length) {
+        addText(`Missing: ${skills.missing_key_skills.join(", ")}`, 18, 10, "normal", [190, 82, 54]);
         addSpacer(3);
       }
       addSpacer(4);
       addLine();
     }
 
-    // Improvements
     if (data.improvements?.length) {
       addText("Key Improvements", 15, 14, "bold");
       addSpacer(6);
-      data.improvements.forEach((item, i) => {
+      data.improvements.forEach((item, index) => {
         const priority = (item.priority ?? "Medium").toUpperCase();
         const issue = item.issue ?? item.description ?? "";
         const fix = item.fix ?? "";
-        addText(`${i + 1}. [${priority}] ${issue}`, 18, 10, "bold");
+        addText(`${index + 1}. [${priority}] ${issue}`, 18, 10, "bold");
         addSpacer(2);
         if (fix) {
-          addText(`   Fix: ${fix}`, 22, 9, "normal", [80, 80, 80]);
+          addText(`Fix: ${fix}`, 22, 9, "normal", [82, 90, 84]);
           addSpacer(3);
         }
       });
@@ -122,66 +121,57 @@ export default function DownloadReport({ data }) {
       addLine();
     }
 
-    // Action Plan
     if (data.action_plan?.length) {
       addText("Action Plan", 15, 14, "bold");
       addSpacer(6);
-      data.action_plan.forEach((step, i) => {
+      data.action_plan.forEach((step, index) => {
         const text = typeof step === "string" ? step : step.description ?? step.text ?? JSON.stringify(step);
-        addText(`${i + 1}. ${text}`, 18, 10);
+        addText(`${index + 1}. ${text}`, 18, 10);
         addSpacer(3);
       });
     }
 
-    // Footer
     addSpacer(10);
     doc.setFontSize(8);
-    doc.setTextColor(180, 180, 180);
+    doc.setTextColor(140, 150, 142);
     doc.text("Generated by ResumeAI", pageWidth / 2, 290, { align: "center" });
-
     doc.save("resume-analysis-report.pdf");
   };
 
+  const generateShareImage = async () => {
+    if (!shareCardRef.current) return;
+
+    try {
+      setIsGeneratingShare(true);
+      const canvas = await html2canvas(shareCardRef.current, {
+        scale: 2,
+        backgroundColor: null,
+        logging: false,
+      });
+      const image = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      const name = data.candidate_name ? data.candidate_name.replace(/\s+/g, "-") : "Candidate";
+      link.href = image;
+      link.download = `ResumeAI-${name}-Score.png`;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate share card", err);
+    } finally {
+      setIsGeneratingShare(false);
+    }
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      zIndex: 100,
-      background: 'rgba(10, 14, 26, 0.9)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      borderTop: '1px solid var(--border)',
-      padding: '14px 48px',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      gap: 16
-    }}>
-      <div className="hidden md:block" style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
-        Analysis complete · {data.candidate_name || 'Candidate'}
-      </div>
-      
-      <button
-        onClick={generatePDF}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        style={{
-          background: isHovered ? 'var(--accent)' : 'transparent',
-          border: '1px solid var(--accent)',
-          color: isHovered ? 'white' : 'var(--accent)',
-          padding: '10px 24px',
-          borderRadius: 'var(--radius-md)',
-          fontSize: 14,
-          fontWeight: 600,
-          fontFamily: 'inherit',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          boxShadow: isHovered ? '0 4px 20px rgba(79,142,247,0.3)' : 'none'
-        }}
-      >
-        ↓ Download PDF Report
+    <div className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-end gap-3 border-t border-[var(--border)] bg-[rgba(8,9,7,0.9)] px-6 py-3 backdrop-blur-xl">
+      <ShareCard ref={shareCardRef} data={data} />
+      <span className="hidden text-sm font-semibold text-[var(--text-secondary)] md:block">
+        Analysis complete | {data.candidate_name || "Candidate"}
+      </span>
+      <button data-report-action="share" onClick={generateShareImage} disabled={isGeneratingShare} className="btn btn-secondary">
+        {isGeneratingShare ? "Generating..." : "Share My Score"}
+      </button>
+      <button data-report-action="download" onClick={generatePDF} className="btn btn-primary">
+        Download PDF Report
       </button>
     </div>
   );

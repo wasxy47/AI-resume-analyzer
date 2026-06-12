@@ -1,22 +1,41 @@
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
 } from "recharts";
+import Icon from "./Icon";
 
 function CustomTooltip({ active, payload }) {
-  if (active && payload && payload.length) {
-    return (
-      <div style={{ background: '#1A2235', border: '1px solid #1E2D45', borderRadius: 8, padding: '8px 12px', color: '#F0F4FF', fontSize: 13, boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
-        <p>{`${payload[0].payload.name}: ${payload[0].value}`}</p>
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div className="rounded-[8px] border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2 text-sm text-[var(--text-primary)] shadow-2xl">
+      <span className="font-bold">{payload[0].payload.name}</span>: {payload[0].value}
+    </div>
+  );
+}
+
+function KeywordGroup({ title, items, tone = "chip", icon = "sparkles" }) {
+  return (
+    <div className="rounded-[8px] border border-[var(--border)] bg-white/[0.035] p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-extrabold text-[var(--text-primary)]">
+        <Icon name={icon} size={15} className="text-[var(--accent)]" />
+        {title}
       </div>
-    );
-  }
-  return null;
+      <div className="keyword-cloud">
+        {items.length ? (
+          items.map((item, i) => <span key={i} className={`chip ${tone}`}>{item}</span>)
+        ) : (
+          <p className="empty-copy">No items listed.</p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function SkillsAnalysis({ data }) {
@@ -28,71 +47,57 @@ export default function SkillsAnalysis({ data }) {
   const missing = data.missing_key_skills || [];
 
   const chartData = [
-    { name: "Technical", count: tech.length },
-    { name: "Soft Skills", count: soft.length },
-    { name: "Certifications", count: certs.length },
-    { name: "Missing", count: missing.length },
+    { name: "Technical", count: tech.length, color: "#4fd9bb" },
+    { name: "Soft", count: soft.length, color: "#83c5ff" },
+    { name: "Certs", count: certs.length, color: "#ffb84d" },
+    { name: "Missing", count: missing.length, color: "#ff6b77" },
   ];
 
   return (
-    <div className="card" style={{ padding: 28, marginBottom: 20 }}>
-      <h3 className="section-heading">Skills Analysis</h3>
+    <section className="surface p-6 md:p-7">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="section-kicker mb-2">
+            <Icon name="target" size={16} />
+            Skills Intelligence
+          </div>
+          <h3 className="section-title">Skill coverage by category</h3>
+          <p className="section-subtitle mt-2 max-w-2xl">
+            The skill map separates proven capabilities from missing keywords that could strengthen role alignment.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {chartData.map((item) => (
+            <div key={item.name} className="rounded-[8px] border border-[var(--border)] bg-[var(--bg-inset)] px-3 py-2 text-center">
+              <div className="text-xl font-black" style={{ color: item.color }}>{item.count}</div>
+              <div className="text-[11px] font-bold text-[var(--text-muted)]">{item.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-      <div style={{ height: 200, width: "100%" }}>
+      <div className="mt-6 h-72 rounded-[8px] border border-[var(--border)] bg-[var(--bg-inset)] p-4">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1E2D45" vertical={false} />
-            <XAxis dataKey="name" tick={{ fill: "#8896B3", fontSize: 12 }} axisLine={false} tickLine={false} />
-            <YAxis hide={true} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-            <Bar
-              dataKey="count"
-              fill="var(--accent)"
-              radius={[4, 4, 0, 0]}
-              barSize={40}
-              label={{ position: 'top', fill: '#8896B3', fontSize: 12 }}
-            />
+          <BarChart data={chartData} margin={{ top: 18, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis dataKey="name" tick={{ fill: "#a7b1a8", fontSize: 12, fontWeight: 700 }} axisLine={false} tickLine={false} />
+            <YAxis hide />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.035)" }} />
+            <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={46} label={{ position: "top", fill: "#a7b1a8", fontSize: 12, fontWeight: 700 }}>
+              {chartData.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, marginTop: 24 }}>
-        <div>
-          <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Technical</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {tech.map((s, i) => (
-              <span key={i} style={{ background: 'rgba(79,142,247,0.1)', border: '1px solid rgba(79,142,247,0.2)', color: '#4F8EF7', padding: '4px 12px', borderRadius: 999, fontSize: 12, display: 'inline-flex' }}>{s}</span>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Soft Skills</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {soft.map((s, i) => (
-              <span key={i} style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', color: '#A78BFA', padding: '4px 12px', borderRadius: 999, fontSize: 12, display: 'inline-flex' }}>{s}</span>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Certifications</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {certs.map((s, i) => (
-              <span key={i} style={{ background: 'var(--green-bg)', border: '1px solid rgba(16,185,129,0.3)', color: 'var(--green)', padding: '4px 12px', borderRadius: 999, fontSize: 12, display: 'inline-flex' }}>{s}</span>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: 11, textTransform: 'uppercase', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>Missing</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {missing.map((s, i) => (
-              <span key={i} style={{ background: 'var(--red-bg)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--orange)', padding: '4px 12px', borderRadius: 999, fontSize: 12, display: 'inline-flex' }}>{s}</span>
-            ))}
-          </div>
-        </div>
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <KeywordGroup title="Technical Skills" items={tech} tone="chip-accent" icon="sliders" />
+        <KeywordGroup title="Soft Skills" items={soft} tone="" icon="users" />
+        <KeywordGroup title="Certifications" items={certs} tone="chip-success" icon="shield" />
+        <KeywordGroup title="Missing Key Skills" items={missing} tone="chip-warning" icon="warning" />
       </div>
-    </div>
+    </section>
   );
 }

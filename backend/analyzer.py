@@ -92,7 +92,33 @@ SYSTEM_PROMPT = """You are an expert resume analyst and senior HR professional w
 "issues": ["string"]
 },
 
-"action_plan": ["string (5 specific steps)"]
+"action_plan": ["string (5 specific steps)"],
+
+"recruiter_verdict": {
+"first_noticed": "string",
+"second_noticed": "string",
+"third_noticed": "string",
+"completely_missed": "string",
+"pile": "Strong Yes | Maybe | No",
+"pile_reasoning": "string",
+"single_best_fix": "string"
+},
+
+"interview_questions": {
+"technical": [{"question": "string", "what_interviewer_wants": "string", "difficulty": "Easy | Medium | Hard"}],
+"behavioral": [{"question": "string", "what_interviewer_wants": "string", "difficulty": "Easy | Medium | Hard"}],
+"curveball": [{"question": "string", "what_interviewer_wants": "string", "difficulty": "Hard"}]
+},
+
+"roadmap": {
+"current_level": "Beginner | Developing | Competitive | Top Tier",
+"current_score": number,
+"next_level": "Developing | Competitive | Top Tier | Elite",
+"next_level_score": number,
+"level_description": "string",
+"tasks": [{"id": "task_1", "task": "string", "impact": "High | Medium | Low", "points_gain": number, "category": "Content | Keywords | Structure | Skills"}],
+"motivational_line": "string"
+}
 }"""
 
 # ---------------------------------------------------------------------------
@@ -209,4 +235,10 @@ def analyze_resume(
             "The AI returned an invalid JSON response. Please try again."
         ) from exc
 
-    return result
+    # Graceful fallback for the 3 optional new sections
+    for optional_key in ["recruiter_verdict", "interview_questions", "roadmap"]:
+        if optional_key not in result or not isinstance(result[optional_key], dict):
+            logger.warning(f"Optional key {optional_key} is missing or malformed.")
+            result[optional_key] = None
+
+    return result, resume_text

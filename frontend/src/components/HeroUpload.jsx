@@ -1,225 +1,225 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
+import heroMark from "../assets/hero.png";
+import Icon from "./Icon";
+
+function formatBytes(bytes) {
+  if (!bytes) return "0 KB";
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
+}
 
 export default function HeroUpload({ onFileSelect, file, targetRole, setTargetRole, onAnalyze, loading, error }) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+
+  const acceptFile = (selectedFile) => {
+    if (!selectedFile) return;
+    const ext = selectedFile.name.split(".").pop()?.toLowerCase();
+    if (ext === "pdf" || ext === "docx") {
+      onFileSelect(selectedFile);
+    }
+  };
 
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      const ext = droppedFile.name.split('.').pop().toLowerCase();
-      if (ext === 'pdf' || ext === 'docx') {
-        onFileSelect(droppedFile);
-      }
-    }
-  };
-
-  const handleFileInput = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      const ext = selectedFile.name.split('.').pop().toLowerCase();
-      if (ext === 'pdf' || ext === 'docx') {
-        onFileSelect(selectedFile);
-      }
-    }
+    acceptFile(e.dataTransfer.files?.[0]);
   };
 
   return (
-    <section style={{ maxWidth: 640, margin: '0 auto', paddingTop: 120, paddingLeft: 24, paddingRight: 24 }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{ fontSize: 48, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-primary)', lineHeight: 1.1 }}>
-          Analyze Your Resume<br/>
-          <span style={{ background: 'linear-gradient(135deg, #4F8EF7, #A78BFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>with AI</span>
-        </h1>
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', maxWidth: 480, margin: '16px auto 40px', textAlign: 'center' }}>
-          Upload your resume and get detailed AI feedback on skills, structure, ATS compatibility, and improvement suggestions.
-        </p>
-      </div>
-
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        style={{
-          border: `2px dashed ${isDragging ? 'var(--accent)' : 'var(--border)'}`,
-          borderRadius: 'var(--radius-xl)',
-          padding: '48px 32px',
-          background: isDragging ? 'var(--accent-glow)' : 'var(--bg-surface)',
-          textAlign: 'center',
-          transition: 'all 0.2s ease',
-          cursor: 'pointer',
-          boxShadow: isDragging ? 'var(--shadow-glow)' : 'none',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--accent)';
-          e.currentTarget.style.background = 'var(--accent-glow)';
-          e.currentTarget.style.boxShadow = 'var(--shadow-glow)';
-        }}
-        onMouseLeave={(e) => {
-          if (!isDragging) {
-            e.currentTarget.style.borderColor = 'var(--border)';
-            e.currentTarget.style.background = 'var(--bg-surface)';
-            e.currentTarget.style.boxShadow = 'none';
-          }
-        }}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileInput}
-          accept=".pdf,.docx"
-          style={{ display: 'none' }}
-        />
-        
-        {!file ? (
-          <>
-            <svg viewBox="0 0 24 24" fill="none" style={{ width: 40, height: 40, color: 'var(--text-muted)', margin: '0 auto 12px' }}>
-              <path d="M12 4v12m0-12l-4 4m4-4l4 4M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>Drop your resume here</p>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>PDF or DOCX supported · Max 10MB</p>
-          </>
-        ) : (
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--green-bg)', border: '1px solid var(--green)', color: 'var(--green)', fontSize: 13, borderRadius: 999, padding: '4px 14px' }}>
-            <svg viewBox="0 0 20 20" fill="none" style={{ width: 14, height: 14 }}>
-              <path d="M4 10l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {file.name}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div style={{ marginTop: 16 }}>
-        <input
-          type="text"
-          value={targetRole}
-          onChange={(e) => setTargetRole(e.target.value)}
-          placeholder="e.g. Software Engineer"
-          style={{
-            width: '100%',
-            background: 'var(--bg-input)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px 16px',
-            color: 'var(--text-primary)',
-            fontSize: 14,
-            outline: 'none',
-            transition: 'all 0.2s',
-          }}
-          onFocus={(e) => {
-            e.target.style.borderColor = 'var(--accent)';
-            e.target.style.boxShadow = '0 0 0 3px var(--accent-glow)';
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = 'var(--border)';
-            e.target.style.boxShadow = 'none';
-          }}
-        />
-        <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>💡 AI will auto-detect your target role if left empty</p>
-      </div>
-
-      <button
-        onClick={onAnalyze}
-        disabled={!file || loading}
-        style={{
-          width: '100%',
-          marginTop: 20,
-          height: 48,
-          background: loading || !file ? 'var(--accent)' : 'var(--accent)',
-          border: 'none',
-          borderRadius: 'var(--radius-md)',
-          color: 'white',
-          fontSize: 15,
-          fontWeight: 600,
-          fontFamily: 'inherit',
-          cursor: (!file || loading) ? 'not-allowed' : 'pointer',
-          opacity: (!file || loading) ? 0.5 : 1,
-          transition: 'all 0.2s',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: 8,
-        }}
-        onMouseEnter={(e) => {
-          if (file && !loading) {
-            e.currentTarget.style.background = 'var(--accent-hover)';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(79,142,247,0.3)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (file && !loading) {
-            e.currentTarget.style.background = 'var(--accent)';
-            e.currentTarget.style.transform = 'none';
-            e.currentTarget.style.boxShadow = 'none';
-          }
-        }}
-        onMouseDown={(e) => {
-          if (file && !loading) {
-            e.currentTarget.style.transform = 'translateY(0)';
-          }
-        }}
-        onMouseUp={(e) => {
-          if (file && !loading) {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }
-        }}
-      >
-        {loading ? (
-          <>
-            <span style={{
-              width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)',
-              borderTop: '2px solid white', borderRadius: '50%',
-              animation: 'spin 0.6s linear infinite'
-            }} />
-            Analyzing...
-          </>
-        ) : "Analyze Resume"}
-      </button>
-
-      {error && (
-        <div style={{
-          background: 'var(--red-bg)', border: '1px solid rgba(239,68,68,0.3)',
-          borderRadius: 'var(--radius-md)', padding: '16px 20px',
-          display: 'flex', gap: 12, alignItems: 'center', marginTop: 16
-        }}>
-          <div style={{ background: 'var(--red-bg)', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--red)', flexShrink: 0 }}>
-            ✕
-          </div>
-          <p style={{ color: 'var(--text-primary)', fontSize: 14, flex: 1 }}>{error}</p>
-          <button onClick={onAnalyze} style={{
-            background: 'transparent', border: '1px solid rgba(239,68,68,0.5)',
-            color: 'var(--red)', borderRadius: 'var(--radius-sm)', padding: '6px 12px',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer'
-          }}>Retry</button>
-        </div>
-      )}
-
-      {loading && (
-        <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[1, 2, 3].map((i) => (
-            <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 24 }}>
-              <div className="shimmer" style={{ width: '40%', height: 20, marginBottom: 16 }}></div>
-              <div className="shimmer" style={{ width: '100%', height: 12, marginBottom: 8 }}></div>
-              <div className="shimmer" style={{ width: '85%', height: 12 }}></div>
+    <section id="upload" className="landing-workspace">
+      <div className="hero-grid">
+        <div className="hero-copy">
+          <div>
+            <div className="section-kicker mb-5">
+              <Icon name="sparkles" size={16} />
+              Resume Intelligence Workspace
             </div>
-          ))}
+            <h1 className="hero-title">
+              Turn a resume into a <span>hiring-ready signal.</span>
+            </h1>
+            <p className="hero-copy-text">
+              Scan structure, ATS fit, recruiter impact, role match, rewrites, and interview angles in one polished workspace.
+            </p>
+
+            <div className="hero-proof-grid">
+              <div className="proof-tile">
+                <strong>ATS</strong>
+                <span>Keyword fit, parsing risks, and missing terms.</span>
+              </div>
+              <div className="proof-tile">
+                <strong>Recruiter</strong>
+                <span>Six-second scan notes and a hiring pile verdict.</span>
+              </div>
+              <div className="proof-tile">
+                <strong>Rewrite</strong>
+                <span>Sharper bullets, stronger summary, cleaner skills.</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="surface resume-visual">
+            <div className="resume-visual-grid">
+              <div className="doc-preview">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="h-3 w-32 rounded-full bg-[#172018]" />
+                    <div className="mt-2 h-2 w-24 rounded-full bg-[#172018]/30" />
+                  </div>
+                  <img src={heroMark} alt="" className="h-14 w-14 object-contain" />
+                </div>
+                <div className="mt-5 grid grid-cols-[0.68fr_1fr] gap-3">
+                  <div>
+                    <div className="doc-line dark" />
+                    <div className="doc-line" />
+                    <div className="doc-line" />
+                    <div className="doc-line" />
+                  </div>
+                  <div>
+                    <div className="doc-line dark" />
+                    <div className="doc-line" />
+                    <div className="doc-line" />
+                    <div className="doc-line" />
+                    <div className="doc-line" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="insight-stack">
+                <div className="insight-tile">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-[var(--text-muted)]">Overall Score</span>
+                    <span className="chip chip-success">84</span>
+                  </div>
+                  <div className="meter">
+                    <div className="meter-fill bg-[var(--green)]" style={{ width: "84%" }} />
+                  </div>
+                </div>
+                <div className="insight-tile">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-[var(--text-muted)]">Role Match</span>
+                    <span className="chip chip-warning">72</span>
+                  </div>
+                  <div className="meter">
+                    <div className="meter-fill bg-[var(--gold)]" style={{ width: "72%" }} />
+                  </div>
+                </div>
+                <div className="insight-tile">
+                  <div className="flex items-start gap-3">
+                    <Icon name="wand" size={18} className="mt-0.5 text-[var(--accent)]" />
+                    <p className="text-sm leading-6 text-[var(--text-secondary)]">
+                      Actionable fixes are organized by priority and score impact.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        <div className="surface upload-studio">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <div className="section-kicker mb-2">
+                <Icon name="upload" size={15} />
+                Start Analysis
+              </div>
+              <h2 className="section-title">Upload your resume</h2>
+              <p className="section-subtitle mt-2">PDF or DOCX, up to 10 MB.</p>
+            </div>
+            <span className="chip">Private by session</span>
+          </div>
+
+          <div
+            className={`drop-zone ${isDragging ? "active" : ""}`}
+            onDragOver={handleDragOver}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") fileInputRef.current?.click();
+            }}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => acceptFile(e.target.files?.[0])}
+              accept=".pdf,.docx"
+              className="hidden"
+            />
+
+            {!file ? (
+              <div className="flex max-w-[310px] flex-col items-center">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[8px] border border-[var(--border)] bg-white/[0.05] text-[var(--accent)]">
+                  <Icon name="fileText" size={28} />
+                </div>
+                <p className="text-base font-extrabold text-[var(--text-primary)]">Drop resume or browse files</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+                  The analysis report appears as an interactive dashboard after upload.
+                </p>
+              </div>
+            ) : (
+              <div className="flex max-w-[340px] flex-col items-center">
+                <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[8px] border border-[rgba(68,208,123,0.3)] bg-[var(--green-bg)] text-[var(--green)]">
+                  <Icon name="check" size={28} />
+                </div>
+                <p className="max-w-full truncate text-base font-extrabold text-[var(--text-primary)]">{file.name}</p>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">{formatBytes(file.size)}</p>
+              </div>
+            )}
+          </div>
+
+          <label className="mt-5 block">
+            <span className="mb-2 block text-sm font-bold text-[var(--text-secondary)]">Target role <span className="font-normal text-[var(--text-muted)]">(optional)</span></span>
+            <div className="relative">
+              <Icon name="briefcase" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+              <input
+                type="text"
+                value={targetRole}
+                onChange={(e) => setTargetRole(e.target.value)}
+                placeholder="Software Engineer, Product Designer, Data Analyst"
+                className="input pl-11"
+                style={{ paddingLeft: 44 }}
+              />
+            </div>
+          </label>
+
+          <button onClick={onAnalyze} disabled={!file || loading} className="btn btn-primary mt-5 w-full">
+            {loading ? (
+              <>
+                <span className="inline-block h-4 w-4 rounded-full border-2 border-[#06100c]/25 border-t-[#06100c]" style={{ animation: "spin 0.7s linear infinite" }} />
+                Analyzing resume
+              </>
+            ) : (
+              <>
+                <Icon name="sparkles" size={18} />
+                Analyze Resume
+              </>
+            )}
+          </button>
+
+          {error && (
+            <div className="mt-4 flex items-start gap-3 rounded-[8px] border border-[rgba(255,107,119,0.28)] bg-[var(--red-bg)] p-4">
+              <Icon name="warning" size={18} className="mt-0.5 shrink-0 text-[var(--red)]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{error}</p>
+                <button onClick={onAnalyze} className="btn btn-danger mt-3 min-h-9 px-3 text-xs">
+                  <Icon name="refresh" size={14} />
+                  Retry
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

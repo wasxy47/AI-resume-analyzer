@@ -8,13 +8,27 @@ import SkillsAnalysis from "./components/SkillsAnalysis";
 import BeforeAfter from "./components/BeforeAfter";
 import Improvements from "./components/Improvements";
 import DownloadReport from "./components/DownloadReport";
+import AnalysisLoader from "./components/AnalysisLoader";
+
+import RecruiterVerdict from "./components/RecruiterVerdict";
+import InterviewQuestions from "./components/InterviewQuestions";
+import JDMatcher from "./components/JDMatcher";
+import LiveReScorer from "./components/LiveReScorer";
+import CoverLetterGenerator from "./components/CoverLetterGenerator";
+import CompletenessRoadmap from "./components/CompletenessRoadmap";
+import TopBar from "./components/TopBar";
+import Sidebar from "./components/Sidebar";
+import { AnimatePresence, motion } from "framer-motion";
+import { API_BASE_URL } from "./config";
 
 function App() {
   const [file, setFile] = useState(null);
   const [targetRole, setTargetRole] = useState("");
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [resumeText, setResumeText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const handleFileSelect = (selectedFile) => {
     setFile(selectedFile);
@@ -37,9 +51,9 @@ function App() {
       if (targetRole.trim()) {
         formData.append("target_role", targetRole.trim());
       }
-      const API_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : (import.meta.env.DEV ? "http://localhost:5000" : "/_/backend");
+      
       const response = await axios.post(
-        `${API_URL}/api/analyze`,
+        `${API_BASE_URL}/api/analyze`,
         formData,
         {
           headers: {
@@ -50,6 +64,10 @@ function App() {
       );
 
       setAnalysisResult(response.data.analysis);
+      if (response.data.resume_text) {
+        setResumeText(response.data.resume_text);
+      }
+      setActiveTab("overview");
     } catch (err) {
       if (err.response?.data?.error) {
         setError(err.response.data.error);
@@ -66,36 +84,120 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <Navbar />
-
-      <main className={analysisResult ? "pb-24" : ""}>
-        <HeroUpload
-          onFileSelect={handleFileSelect}
-          file={file}
-          targetRole={targetRole}
-          setTargetRole={setTargetRole}
-          onAnalyze={handleAnalyze}
-          loading={loading}
-          error={error}
-        />
-
-        {analysisResult && (
-          <div className="animate-fade-in-up" style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 80px' }}>
-            <ScoreDashboard data={analysisResult} />
-            <JobRoleMatch data={analysisResult.job_role_match} />
-            <SkillsAnalysis data={analysisResult.skills_analysis} />
-            <BeforeAfter data={analysisResult.before_after} />
-            <Improvements
-              improvements={analysisResult.improvements}
-              actionPlan={analysisResult.action_plan}
-              strengths={analysisResult.strengths}
-              atsCompatibility={analysisResult.ats_compatibility}
+    <div className="app-background">
+      {!analysisResult && (
+        <>
+          <Navbar />
+          <main className="workspace-main">
+            <HeroUpload
+              onFileSelect={handleFileSelect}
+              file={file}
+              targetRole={targetRole}
+              setTargetRole={setTargetRole}
+              onAnalyze={handleAnalyze}
+              loading={loading}
+              error={error}
             />
-            <DownloadReport data={analysisResult} />
-          </div>
-        )}
-      </main>
+
+            {loading && (
+              <div className="landing-workspace pt-0 animate-fade-in-up">
+                <AnalysisLoader />
+              </div>
+            )}
+          </main>
+        </>
+      )}
+
+      {analysisResult && !loading && (
+        <main className="analysis-shell">
+            <TopBar 
+              candidateName={analysisResult.candidate_name} 
+              detectedRole={analysisResult.detected_role}
+              overallScore={analysisResult.overall_score}
+              onNewAnalysis={() => setAnalysisResult(null)}
+            />
+            
+            <Sidebar 
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              atsScore={analysisResult.ats_compatibility?.score}
+            />
+
+            <div className="analysis-content">
+              <div className="content-lane">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  {activeTab === "overview" && (
+                    <div className="space-y-6">
+                      <ScoreDashboard data={analysisResult} />
+                      <Improvements
+                        improvements={analysisResult.improvements}
+                        strengths={analysisResult.strengths}
+                        actionPlan={[]}
+                        atsCompatibility={{}}
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === "roadmap" && (
+                    <CompletenessRoadmap roadmap={analysisResult.roadmap} overallScore={analysisResult.overall_score} candidateName={analysisResult.candidate_name} />
+                  )}
+
+                  {activeTab === "skills" && (
+                    <div className="space-y-6">
+                      <JobRoleMatch data={analysisResult.job_role_match} />
+                      <SkillsAnalysis data={analysisResult.skills_analysis} />
+                    </div>
+                  )}
+
+                  {activeTab === "recruiter" && (
+                    <RecruiterVerdict verdict={analysisResult.recruiter_verdict} />
+                  )}
+
+                  {activeTab === "rewrites" && (
+                    <BeforeAfter data={analysisResult.before_after} />
+                  )}
+
+                  {activeTab === "interview" && (
+                    <InterviewQuestions questions={analysisResult.interview_questions} />
+                  )}
+
+                  {activeTab === "cover" && (
+                    <CoverLetterGenerator resumeText={resumeText} targetRole={analysisResult.target_role || targetRole} candidateName={analysisResult.candidate_name} />
+                  )}
+
+                  {activeTab === "ats" && (
+                    <Improvements
+                      improvements={[]}
+                      strengths={[]}
+                      actionPlan={analysisResult.action_plan}
+                      atsCompatibility={analysisResult.ats_compatibility}
+                    />
+                  )}
+
+                  {activeTab === "rescore" && (
+                    <LiveReScorer sectionScores={analysisResult.section_scores} targetRole={analysisResult.target_role || targetRole} />
+                  )}
+
+                  {activeTab === "jdmatch" && (
+                    <JDMatcher resumeText={resumeText} />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+              </div>
+            </div>
+            
+            <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', pointerEvents: 'none', opacity: 0 }}>
+              <DownloadReport data={analysisResult} />
+            </div>
+        </main>
+      )}
     </div>
   );
 }

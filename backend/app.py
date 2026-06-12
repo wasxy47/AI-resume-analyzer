@@ -83,8 +83,8 @@ def analyze():
             len(file_bytes),
             target_role,
         )
-        result = analyze_resume(file_bytes, file.filename, target_role)
-        return jsonify({"success": True, "analysis": result}), 200
+        result, resume_text = analyze_resume(file_bytes, file.filename, target_role)
+        return jsonify({"success": True, "analysis": result, "resume_text": resume_text}), 200
 
     except ValueError as exc:
         # Covers unsupported type / empty text
@@ -99,6 +99,166 @@ def analyze():
     except Exception as exc:
         logger.exception("Unexpected error during analysis")
         return jsonify({"error": "An unexpected error occurred. Please try again."}), 500
+
+# ---------------------------------------------------------------------------
+# New Advanced Endpoints
+# ---------------------------------------------------------------------------
+
+@app.route("/api/analyze-jd", methods=["POST"])
+def analyze_jd():
+    data = request.json
+    resume_text = data.get("resume_text")
+    job_description = data.get("job_description")
+    
+    if not resume_text or not job_description:
+        return jsonify({"error": "Missing resume_text or job_description"}), 400
+        
+    system_prompt = """You are an expert ATS system and career coach. Compare the candidate's resume against the provided job description and return ONLY a valid JSON object:
+{
+  "match_score": number between 0-100,
+  "matched_keywords": ["keyword1", "keyword2"],
+  "missing_keywords": ["keyword1", "keyword2"],
+  "matched_phrases": ["phrase from JD found in resume"],
+  "missing_phrases": ["important JD phrase not in resume"],
+  "score_breakdown": {
+    "skills_match": number,
+    "experience_match": number,
+    "education_match": number,
+    "keywords_match": number
+  },
+  "top_3_improvements": [
+    "Specific actionable change to increase match score"
+  ],
+  "verdict": "string — 2 sentence honest assessment of this resume for this role"
+}"""
+    
+    user_message = f"Resume:\n{resume_text}\n\nJob Description:\n{job_description}"
+    
+    try:
+        from analyzer import client, MODEL
+        import json
+        import re
+        
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=0.3,
+            max_tokens=2048,
+        )
+        
+        raw_content = response.choices[0].message.content
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw_content.strip())
+        cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+        result = json.loads(cleaned)
+        return jsonify(result), 200
+        
+    except Exception as exc:
+        logger.exception("JD Match analysis failed")
+        return jsonify({"error": "Failed to analyze job description match."}), 500
+
+
+@app.route("/api/rescore-section", methods=["POST"])
+def rescore_section():
+    data = request.json
+    section_name = data.get("section_name")
+    section_text = data.get("section_text")
+    target_role = data.get("target_role", "General")
+    
+    if not section_name or not section_text:
+        return jsonify({"error": "Missing section_name or section_text"}), 400
+        
+    system_prompt = """You are an expert resume reviewer. Evaluate this specific resume section and return ONLY a valid JSON object with NO extra text:
+{
+  "score": number between 0-100,
+  "grade": "A" or "B" or "C" or "D" or "F",
+  "quick_feedback": "string — 1-2 sentences on what changed and what still needs work",
+  "top_issue": "string — single most important remaining problem if any"
+}"""
+    
+    user_message = f"Section: {section_name}\nTarget Role: {target_role}\n\n{section_text}"
+    
+    try:
+        from analyzer import client, MODEL
+        import json
+        import re
+        
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=0.3,
+            max_tokens=1024,
+        )
+        
+        raw_content = response.choices[0].message.content
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw_content.strip())
+        cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+        result = json.loads(cleaned)
+        return jsonify(result), 200
+        
+    except Exception as exc:
+        logger.exception("Rescore section failed")
+        return jsonify({"error": "Failed to rescore section."}), 500
+
+
+@app.route("/api/generate-cover-letter", methods=["POST"])
+def generate_cover_letter():
+    data = request.json
+    resume_text = data.get("resume_text")
+    target_role = data.get("target_role")
+    tone = data.get("tone", "professional")
+    
+    if not resume_text or not target_role:
+        return jsonify({"error": "Missing resume_text or target_role"}), 400
+        
+    system_prompt = f"""You are an expert career coach who writes outstanding cover letters. Write a cover letter based on the candidate's actual resume — use their REAL achievements, projects, and skills. Do NOT use placeholders like [Company Name] or [Your Name]. Reference specific things from their resume.
+
+Tone guide:
+- professional: formal, structured, traditional
+- confident: assertive, achievement-focused, bold claims
+- concise: short (3 paragraphs max), punchy, direct
+
+Requested tone: {tone}
+
+Return ONLY a valid JSON object:
+{{
+  "cover_letter": "full cover letter text with \\n for line breaks",
+  "word_count": number,
+  "key_achievements_used": ["achievement 1", "achievement 2", "achievement 3"],
+  "tone_used": "{tone}"
+}}"""
+    
+    user_message = f"Resume:\n{resume_text}\n\nTarget Role:\n{target_role}"
+    
+    try:
+        from analyzer import client, MODEL
+        import json
+        import re
+        
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            temperature=0.7,
+            max_tokens=2048,
+        )
+        
+        raw_content = response.choices[0].message.content
+        cleaned = re.sub(r"^```(?:json)?\s*", "", raw_content.strip())
+        cleaned = re.sub(r"\s*```$", "", cleaned).strip()
+        result = json.loads(cleaned)
+        return jsonify(result), 200
+        
+    except Exception as exc:
+        logger.exception("Cover letter generation failed")
+        return jsonify({"error": "Failed to generate cover letter."}), 500
 
 
 # ---------------------------------------------------------------------------

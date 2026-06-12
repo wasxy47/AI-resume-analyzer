@@ -1,47 +1,35 @@
+import heroMark from "../assets/hero.png";
+import Icon from "./Icon";
+
 export default function Navbar() {
   return (
-    <nav
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 56,
-        background: 'rgba(10, 14, 26, 0.8)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 48px',
-        zIndex: 200,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ color: 'var(--accent)', fontSize: 16 }}>✦</span>
-        <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
-          Resume<span style={{ color: 'var(--accent)' }}>AI</span>
-        </span>
-      </div>
+    <nav className="fixed left-0 right-0 top-0 z-[200] border-b border-[var(--border)] bg-[rgba(8,9,7,0.82)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] w-[min(1180px,calc(100%-32px))] items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[8px] border border-[var(--border)] bg-white/[0.04]">
+            <img src={heroMark} alt="" className="h-7 w-7 object-contain" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[15px] font-extrabold leading-tight text-[var(--text-primary)]">ResumeAI</div>
+            <div className="hidden text-[12px] font-semibold text-[var(--text-muted)] sm:block">Hiring signal engine</div>
+          </div>
+        </div>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 999,
-          padding: '4px 12px',
-          fontSize: 12,
-          color: 'var(--text-secondary)',
-        }}
-      >
-        <span style={{ display: 'flex', gap: 2 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#F55036', display: 'inline-block', marginTop: 1 }} />
-        </span>
-        Powered by Groq
+        <div className="hidden items-center gap-2 md:flex">
+          <span className="chip">
+            <Icon name="shield" size={14} />
+            ATS Ready
+          </span>
+          <span className="chip chip-accent">
+            <Icon name="bolt" size={14} />
+            Groq Powered
+          </span>
+        </div>
+
+        <a href="#upload" className="btn btn-secondary h-10 min-h-10 px-4">
+          <Icon name="upload" size={16} />
+          Upload
+        </a>
       </div>
     </nav>
   );
