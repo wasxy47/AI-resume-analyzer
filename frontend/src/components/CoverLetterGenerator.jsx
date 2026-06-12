@@ -128,7 +128,7 @@ export default function CoverLetterGenerator({ resumeText, targetRole, candidate
                   <Icon name="refresh" size={16} />
                   Regenerate
                 </button>
-                <button onClick={handleCopy} className="btn border-[#172018] bg-[#172018] text-white hover:bg-[#172018]/90">
+                <button onClick={handleCopy} className="btn btn-secondary border-[#172018]/20 bg-[#172018]/5 text-[#172018] hover:bg-[#172018]/10">
                   <Icon name={copied ? "check" : "copy"} size={16} />
                   {copied ? "Copied" : "Copy"}
                 </button>

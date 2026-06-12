@@ -252,6 +252,7 @@ Return ONLY a valid JSON object:
             ],
             temperature=0.7,
             max_tokens=2048,
+            response_format={"type": "json_object"},
         )
         
         raw_content = response.choices[0].message.content
